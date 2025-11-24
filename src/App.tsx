@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import SignupPage from "./features/auth/pages/Signup";
 import "./App.css";
 import CreateTemplate from "./features/template/pages/CreateTemplate";
+import InteractiveMap from "./features/maps/pages/InteractiveMap";
 
 function App() {
   return (
@@ -9,7 +10,7 @@ function App() {
       <Routes>
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/create-template" element={<CreateTemplate />} />
-        {/* Add more routes here as needed */}
+        <Route path="/interactive-map" element={<InteractiveMap />} />
 
         {/* Optional: Add a redirect or 404 page */}
         <Route
