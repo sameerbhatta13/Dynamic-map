@@ -3,6 +3,8 @@ import SignupPage from "./features/auth/pages/Signup";
 import "./App.css";
 import CreateTemplate from "./features/template/pages/CreateTemplate";
 import InteractiveMap from "./features/maps/pages/InteractiveMap";
+import ViewTemplates from "./features/template/components/ViewTemplate";
+import LocationForm from "./features/template/components/LocationForm";
 
 function App() {
   return (
@@ -10,6 +12,8 @@ function App() {
       <Routes>
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/create-template" element={<CreateTemplate />} />
+        <Route path="/view-template" element={<ViewTemplates />} />
+        <Route path="/add-location/:templateId" element={<LocationForm />} />
         <Route path="/interactive-map" element={<InteractiveMap />} />
 
         {/* Optional: Add a redirect or 404 page */}
