@@ -89,6 +89,21 @@ interface LocationFormData {
     | null;
 }
 
+interface GeoJSONFeatureCollection {
+  type: string;
+  features: Array<{
+    type: string;
+    properties: {
+      shapeName: string;
+      [key: string]: string | number | boolean;
+    };
+    geometry: {
+      type: string;
+      coordinates: number[][] | number[][][] | number[][][][];
+    };
+  }>;
+}
+
 const MARKER_ICONS = [
   { id: "location", icon: MapPin },
   { id: "calendar", icon: Calendar },
@@ -136,6 +151,10 @@ export default function InteractiveMap() {
   const hoverTimeoutRef = useRef<number | null>(null);
   const hoveredProvinceIdRef = useRef<string | number | null>(null);
 
+  const [isSettingLocation, setIsSettingLocation] = useState(false);
+
+  const provincesDataRef = useRef<GeoJSONFeatureCollection | null>(null);
+
   const nepalBounds: [[number, number], [number, number]] = [
     [78.0, 24.0],
     [90.5, 32.5],
@@ -151,22 +170,60 @@ export default function InteractiveMap() {
     place: { latitude: 0, longitude: 0 },
   });
 
-  // Determine which province a coordinate falls into
+  // Determine which province a coordinate falls into using actual GeoJSON polygons
   const getProvinceFromCoordinates = useCallback(
     (lat: number, lng: number): string => {
-      // Approximate province boundaries (you may need to adjust these)
-      if (lng > 87.0 && lat > 26.5) return "Koshi Province";
-      if (lng < 85.5 && lat < 27.5 && lat > 26.0) return "Madhesh Province";
-      if (lng > 84.5 && lng < 86.5 && lat > 27.0 && lat < 28.5)
-        return "Bagmati Province";
-      if (lng > 83.0 && lng < 85.0 && lat > 27.5) return "Gandaki Province";
-      if (lng < 83.5 && lat < 28.0 && lat > 27.0) return "Lumbini Province";
-      if (lng < 82.5 && lat > 28.5) return "Karnali Province";
-      if (lng < 81.0) return "Sudurpaschim Province";
-      return "Bagmati Province"; // Default
+      if (!provincesDataRef.current) {
+        return "Unknown Province";
+      }
+
+      const point: [number, number] = [lng, lat];
+
+      // Check each province polygon
+      for (const feature of provincesDataRef.current.features) {
+        const provinceName = feature.properties?.shapeName;
+        if (!provinceName) continue;
+
+        // Handle both Polygon and MultiPolygon geometries
+        const coordinates = feature.geometry.coordinates;
+        const polygons =
+          feature.geometry.type === "MultiPolygon"
+            ? (coordinates as number[][][][])
+            : [coordinates as number[][][]];
+
+        // Check if point is inside any of the polygons
+        for (const polygon of polygons) {
+          if (isPointInPolygon(point, polygon[0] as Array<[number, number]>)) {
+            return provinceName;
+          }
+        }
+      }
+
+      return "Unknown Province";
     },
     []
   );
+
+  // Helper function: Ray casting algorithm for point-in-polygon
+  const isPointInPolygon = (
+    point: [number, number],
+    polygon: Array<[number, number]>
+  ): boolean => {
+    const [x, y] = point;
+    let inside = false;
+
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+      const [xi, yi] = polygon[i];
+      const [xj, yj] = polygon[j];
+
+      const intersect =
+        yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+
+      if (intersect) inside = !inside;
+    }
+
+    return inside;
+  };
 
   // Clear hover states
   const clearHoverState = useCallback(() => {
@@ -202,6 +259,25 @@ export default function InteractiveMap() {
     setHoveredForm(null);
     setModalPosition(null);
   }, []);
+
+  const handleMapClickForLocation = useCallback(
+    (e: maplibregl.MapMouseEvent) => {
+      if (!isSettingLocation) return;
+
+      const { lng, lat } = e.lngLat;
+
+      setLocationFormData({
+        ...locationFormData,
+        place: {
+          latitude: parseFloat(lat.toFixed(6)),
+          longitude: parseFloat(lng.toFixed(6)),
+        },
+      });
+
+      setIsSettingLocation(false);
+    },
+    [isSettingLocation]
+  );
 
   // Handle modal close
   const handleModalClose = useCallback(() => {
@@ -282,7 +358,13 @@ export default function InteractiveMap() {
         "top-right"
       );
 
-      map.current.on("click", handleMapClick);
+      map.current.on("click", (e) => {
+        if (isSettingLocation) {
+          handleMapClickForLocation(e);
+        } else {
+          handleMapClick();
+        }
+      });
 
       map.current.on("load", () => {
         loadBoundaries();
@@ -396,6 +478,8 @@ export default function InteractiveMap() {
 
         const provincesResponse = await fetch(NEPAL_BOUNDARIES.provinces);
         const provincesData = await provincesResponse.json();
+
+        provincesDataRef.current = provincesData;
 
         map.current.addSource("provinces", {
           type: "geojson",
@@ -587,7 +671,12 @@ export default function InteractiveMap() {
         clearTimeout(hoverTimeoutRef.current);
       }
     };
-  }, [handleMapClick, getProvinceFromCoordinates]);
+  }, [
+    handleMapClick,
+    handleMapClickForLocation,
+    isSettingLocation,
+    getProvinceFromCoordinates,
+  ]);
 
   // Handle marker styling based on hovered province
   useEffect(() => {
@@ -932,10 +1021,42 @@ export default function InteractiveMap() {
     }
   };
 
+  useEffect(() => {
+    if (!map.current) return;
+
+    const canvas = map.current.getCanvas();
+    if (isSettingLocation) {
+      canvas.style.cursor = "crosshair";
+    } else {
+      canvas.style.cursor = "";
+    }
+  }, [isSettingLocation]);
+
   return (
     <div className="relative w-full h-screen">
       {/* Map Container */}
       <div ref={mapContainer} className="w-full h-full" />
+
+      {/* Set Location Banner */}
+      {isSettingLocation && (
+        <div className="absolute top-0 left-0 right-0 z-50 bg-blue-600 text-white py-3 px-4 shadow-lg">
+          <div className="flex items-center justify-between max-w-4xl mx-auto">
+            <div className="flex items-center gap-3">
+              <MapPin size={24} className="animate-pulse" />
+              <span className="font-semibold text-lg">
+                Click on the map to set location
+              </span>
+            </div>
+            <button
+              onClick={() => setIsSettingLocation(false)}
+              className="px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition font-medium cursor-pointer hover:scale-102"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Top Left Controls */}
       <div className="absolute top-4 left-4 z-10 flex gap-2">
         <button
@@ -1237,6 +1358,15 @@ export default function InteractiveMap() {
                     <MapPin size={16} />
                     Location Coordinates *
                   </h4>
+
+                  <button
+                    onClick={() => setIsSettingLocation(true)}
+                    className="w-full mb-3 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition flex items-center justify-center gap-2 cursor-pointer hover:scale-102"
+                  >
+                    <MapPin size={16} />
+                    Set in Map
+                  </button>
+
                   <div className="space-y-2">
                     <label className="block text-xs font-medium text-gray-700 mb-1">
                       Latitude *
@@ -1363,6 +1493,54 @@ export default function InteractiveMap() {
                         />
                       )}
 
+                      {field.type === "image" && (
+                        <div>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                setLocationFormData({
+                                  ...locationFormData,
+                                  [field.key]: file,
+                                });
+                              }
+                            }}
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                          {fieldValue instanceof File && (
+                            <p className="text-xs text-green-600 mt-1">
+                              Selected: {(fieldValue as File).name}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {field.type === "document" && (
+                        <div>
+                          <input
+                            type="file"
+                            accept=".pdf,.doc,.docx,.txt"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                setLocationFormData({
+                                  ...locationFormData,
+                                  [field.key]: file,
+                                });
+                              }
+                            }}
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                          {fieldValue instanceof File && (
+                            <p className="text-xs text-green-600 mt-1">
+                              Selected: {(fieldValue as File).name}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
                       {field.description && (
                         <p className="text-xs text-gray-500 mt-1">
                           {field.description}
@@ -1395,6 +1573,17 @@ export default function InteractiveMap() {
                       locationFormData.place.longitude.toString()
                     );
 
+                    // selectedTemplateForForm.dynamicFields.forEach((field) => {
+                    //   const value = locationFormData[field.key];
+                    //   if (
+                    //     value !== null &&
+                    //     value !== undefined &&
+                    //     value !== ""
+                    //   ) {
+                    //     formData.append(field.key, value.toString());
+                    //   }
+                    // });
+
                     selectedTemplateForForm.dynamicFields.forEach((field) => {
                       const value = locationFormData[field.key];
                       if (
@@ -1402,7 +1591,19 @@ export default function InteractiveMap() {
                         value !== undefined &&
                         value !== ""
                       ) {
-                        formData.append(field.key, value.toString());
+                        if (value instanceof File) {
+                          // Append file directly
+                          formData.append(field.key, value);
+                        } else if (
+                          typeof value === "object" &&
+                          "latitude" in value
+                        ) {
+                          // Handle place type (already handled by fixedFields)
+                          // Skip to avoid duplication
+                        } else {
+                          // Append as string
+                          formData.append(field.key, value.toString());
+                        }
                       }
                     });
 
