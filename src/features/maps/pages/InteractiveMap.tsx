@@ -155,6 +155,8 @@ export default function InteractiveMap() {
 
   const provincesDataRef = useRef<GeoJSONFeatureCollection | null>(null);
 
+  const [locationViewTab, setLocationViewTab] = useState<"add" | "view">("add");
+
   const nepalBounds: [[number, number], [number, number]] = [
     [78.0, 24.0],
     [90.5, 32.5],
@@ -1341,300 +1343,473 @@ export default function InteractiveMap() {
                 </button>
               </div>
             ) : activeView === "addLocation" && selectedTemplateForForm ? (
-              // NEW: Location form in sidebar
-              <div className="p-4 space-y-4">
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    {selectedTemplateForForm.name}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {selectedTemplateForForm.description}
-                  </p>
-                </div>
-
-                {/* Location Coordinates */}
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h4 className="text-sm font-semibold text-blue-900 mb-2 flex items-center gap-2">
-                    <MapPin size={16} />
-                    Location Coordinates *
-                  </h4>
-
+              // Location Form with Tabs
+              <div className="flex flex-col h-full">
+                {/* Sub-tabs for Add/View */}
+                <div className="flex border-b">
                   <button
-                    onClick={() => setIsSettingLocation(true)}
-                    className="w-full mb-3 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition flex items-center justify-center gap-2 cursor-pointer hover:scale-102"
+                    onClick={() => setLocationViewTab("add")}
+                    className={`flex-1 px-4 py-3 text-sm font-medium transition cursor-pointer hover:scale-102 ${
+                      locationViewTab === "add"
+                        ? "text-blue-600 border-b-2 border-blue-600"
+                        : "text-gray-600 hover:text-gray-800"
+                    }`}
                   >
-                    <MapPin size={16} />
-                    Set in Map
+                    Add Location
                   </button>
-
-                  <div className="space-y-2">
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Latitude *
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      placeholder="Latitude (e.g., 27.7172)"
-                      value={locationFormData.place.latitude}
-                      onChange={(e) =>
-                        setLocationFormData({
-                          ...locationFormData,
-                          place: {
-                            ...locationFormData.place,
-                            latitude:
-                              e.target.value === ""
-                                ? 0
-                                : parseFloat(e.target.value),
-                          },
-                        })
-                      }
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Longitude *
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      placeholder="Longitude (e.g., 85.3240)"
-                      value={locationFormData.place.longitude}
-                      onChange={(e) =>
-                        setLocationFormData({
-                          ...locationFormData,
-                          place: {
-                            ...locationFormData.place,
-                            longitude:
-                              e.target.value === ""
-                                ? 0
-                                : parseFloat(e.target.value),
-                          },
-                        })
-                      }
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
+                  <button
+                    onClick={() => setLocationViewTab("view")}
+                    className={`flex-1 px-4 py-3 text-sm font-medium transition cursor-pointer hover:scale-102 ${
+                      locationViewTab === "view"
+                        ? "text-blue-600 border-b-2 border-blue-600"
+                        : "text-gray-600 hover:text-gray-800"
+                    }`}
+                  >
+                    View Locations (
+                    {
+                      forms.filter(
+                        (f) => f.templateId === selectedTemplateForForm.id
+                      ).length
+                    }
+                    )
+                  </button>
                 </div>
 
-                {/* Dynamic Fields */}
-                {selectedTemplateForForm.dynamicFields.map((field) => {
-                  const fieldValue = locationFormData[field.key];
-
-                  return (
-                    <div key={field.key}>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {field.label} {field.required && "*"}
-                      </label>
-
-                      {field.type === "string" && (
-                        <input
-                          type="text"
-                          value={
-                            typeof fieldValue === "string" ? fieldValue : ""
-                          }
-                          onChange={(e) =>
-                            setLocationFormData({
-                              ...locationFormData,
-                              [field.key]: e.target.value,
-                            })
-                          }
-                          placeholder={
-                            field.description ||
-                            `Enter ${field.label.toLowerCase()}`
-                          }
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      )}
-
-                      {field.type === "number" && (
-                        <input
-                          type="number"
-                          value={
-                            typeof fieldValue === "number" ? fieldValue : 0
-                          }
-                          onChange={(e) =>
-                            setLocationFormData({
-                              ...locationFormData,
-                              [field.key]: parseFloat(e.target.value) || 0,
-                            })
-                          }
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      )}
-
-                      {field.type === "date" && (
-                        <input
-                          type="date"
-                          value={
-                            typeof fieldValue === "string" ? fieldValue : ""
-                          }
-                          onChange={(e) =>
-                            setLocationFormData({
-                              ...locationFormData,
-                              [field.key]: e.target.value,
-                            })
-                          }
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      )}
-
-                      {field.type === "time" && (
-                        <input
-                          type="time"
-                          value={
-                            typeof fieldValue === "string" ? fieldValue : ""
-                          }
-                          onChange={(e) =>
-                            setLocationFormData({
-                              ...locationFormData,
-                              [field.key]: e.target.value,
-                            })
-                          }
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      )}
-
-                      {field.type === "image" && (
-                        <div>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                setLocationFormData({
-                                  ...locationFormData,
-                                  [field.key]: file,
-                                });
-                              }
-                            }}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                          {fieldValue instanceof File && (
-                            <p className="text-xs text-green-600 mt-1">
-                              Selected: {(fieldValue as File).name}
-                            </p>
-                          )}
-                        </div>
-                      )}
-
-                      {field.type === "document" && (
-                        <div>
-                          <input
-                            type="file"
-                            accept=".pdf,.doc,.docx,.txt"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                setLocationFormData({
-                                  ...locationFormData,
-                                  [field.key]: file,
-                                });
-                              }
-                            }}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                          {fieldValue instanceof File && (
-                            <p className="text-xs text-green-600 mt-1">
-                              Selected: {(fieldValue as File).name}
-                            </p>
-                          )}
-                        </div>
-                      )}
-
-                      {field.description && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          {field.description}
+                {/* Tab Content */}
+                <div className="flex-1 overflow-y-auto">
+                  {locationViewTab === "add" ? (
+                    // Add Location Form
+                    <div className="p-4 space-y-4">
+                      <div className="mb-4">
+                        <h3 className="text-lg font-semibold text-gray-800">
+                          {selectedTemplateForForm.name}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          {selectedTemplateForForm.description}
                         </p>
+                      </div>
+
+                      {/* Location Coordinates */}
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <h4 className="text-sm font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                          <MapPin size={16} />
+                          Location Coordinates *
+                        </h4>
+
+                        <button
+                          onClick={() => setIsSettingLocation(true)}
+                          className="w-full mb-3 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition flex items-center justify-center gap-2 cursor-pointer hover:scale-102"
+                        >
+                          <MapPin size={16} />
+                          Set in Map
+                        </button>
+
+                        <div className="space-y-2">
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            Latitude *
+                          </label>
+                          <input
+                            type="number"
+                            step="any"
+                            placeholder="Latitude (e.g., 27.7172)"
+                            value={locationFormData.place.latitude}
+                            onChange={(e) =>
+                              setLocationFormData({
+                                ...locationFormData,
+                                place: {
+                                  ...locationFormData.place,
+                                  latitude:
+                                    e.target.value === ""
+                                      ? 0
+                                      : parseFloat(e.target.value),
+                                },
+                              })
+                            }
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            Longitude *
+                          </label>
+                          <input
+                            type="number"
+                            step="any"
+                            placeholder="Longitude (e.g., 85.3240)"
+                            value={locationFormData.place.longitude}
+                            onChange={(e) =>
+                              setLocationFormData({
+                                ...locationFormData,
+                                place: {
+                                  ...locationFormData.place,
+                                  longitude:
+                                    e.target.value === ""
+                                      ? 0
+                                      : parseFloat(e.target.value),
+                                },
+                              })
+                            }
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Dynamic Fields */}
+                      {selectedTemplateForForm.dynamicFields.map((field) => {
+                        const fieldValue = locationFormData[field.key];
+
+                        return (
+                          <div key={field.key}>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              {field.label} {field.required && "*"}
+                            </label>
+
+                            {field.type === "string" && (
+                              <input
+                                type="text"
+                                value={
+                                  typeof fieldValue === "string"
+                                    ? fieldValue
+                                    : ""
+                                }
+                                onChange={(e) =>
+                                  setLocationFormData({
+                                    ...locationFormData,
+                                    [field.key]: e.target.value,
+                                  })
+                                }
+                                placeholder={
+                                  field.description ||
+                                  `Enter ${field.label.toLowerCase()}`
+                                }
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                            )}
+
+                            {field.type === "number" && (
+                              <input
+                                type="number"
+                                value={
+                                  typeof fieldValue === "number"
+                                    ? fieldValue
+                                    : 0
+                                }
+                                onChange={(e) =>
+                                  setLocationFormData({
+                                    ...locationFormData,
+                                    [field.key]:
+                                      parseFloat(e.target.value) || 0,
+                                  })
+                                }
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                            )}
+
+                            {field.type === "date" && (
+                              <input
+                                type="date"
+                                value={
+                                  typeof fieldValue === "string"
+                                    ? fieldValue
+                                    : ""
+                                }
+                                onChange={(e) =>
+                                  setLocationFormData({
+                                    ...locationFormData,
+                                    [field.key]: e.target.value,
+                                  })
+                                }
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                            )}
+
+                            {field.type === "time" && (
+                              <input
+                                type="time"
+                                value={
+                                  typeof fieldValue === "string"
+                                    ? fieldValue
+                                    : ""
+                                }
+                                onChange={(e) =>
+                                  setLocationFormData({
+                                    ...locationFormData,
+                                    [field.key]: e.target.value,
+                                  })
+                                }
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                            )}
+
+                            {field.type === "image" && (
+                              <div>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      setLocationFormData({
+                                        ...locationFormData,
+                                        [field.key]: file,
+                                      });
+                                    }
+                                  }}
+                                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                                {fieldValue instanceof File && (
+                                  <p className="text-xs text-green-600 mt-1">
+                                    Selected: {(fieldValue as File).name}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+
+                            {field.type === "document" && (
+                              <div>
+                                <input
+                                  type="file"
+                                  accept=".pdf,.doc,.docx,.txt"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      setLocationFormData({
+                                        ...locationFormData,
+                                        [field.key]: file,
+                                      });
+                                    }
+                                  }}
+                                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                                {fieldValue instanceof File && (
+                                  <p className="text-xs text-green-600 mt-1">
+                                    Selected: {(fieldValue as File).name}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+
+                            {field.description && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                {field.description}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      <button
+                        onClick={async () => {
+                          // Validate required fields
+                          if (
+                            !locationFormData.place.latitude ||
+                            !locationFormData.place.longitude
+                          ) {
+                            alert("Please provide latitude and longitude");
+                            return;
+                          }
+
+                          // Submit form
+                          const formData = new FormData();
+                          formData.append(
+                            "templateId",
+                            selectedTemplateForForm.id
+                          );
+                          formData.append(
+                            "place.lat",
+                            locationFormData.place.latitude.toString()
+                          );
+                          formData.append(
+                            "place.lng",
+                            locationFormData.place.longitude.toString()
+                          );
+
+                          selectedTemplateForForm.dynamicFields.forEach(
+                            (field) => {
+                              const value = locationFormData[field.key];
+                              if (
+                                value !== null &&
+                                value !== undefined &&
+                                value !== ""
+                              ) {
+                                if (value instanceof File) {
+                                  formData.append(field.key, value);
+                                } else if (
+                                  typeof value === "object" &&
+                                  "latitude" in value
+                                ) {
+                                  // Skip place type to avoid duplication
+                                } else {
+                                  formData.append(field.key, value.toString());
+                                }
+                              }
+                            }
+                          );
+
+                          try {
+                            const response = await fetch(
+                              "http://192.168.1.147:3000/api/form/create",
+                              {
+                                method: "POST",
+                                headers: {
+                                  Authorization: "Bearer YOUR_SECRET_TOKEN",
+                                },
+                                body: formData,
+                              }
+                            );
+
+                            if (response.ok) {
+                              alert("Location added successfully!");
+                              await loadAllForms();
+                              setLocationViewTab("view");
+
+                              // Reset form data
+                              const initialData: LocationFormData = {
+                                place: { latitude: 0, longitude: 0 },
+                              };
+                              selectedTemplateForForm.dynamicFields.forEach(
+                                (field) => {
+                                  if (field.type === "number") {
+                                    initialData[field.key] = 0;
+                                  } else if (field.type === "place") {
+                                    initialData[field.key] = {
+                                      latitude: 0,
+                                      longitude: 0,
+                                    };
+                                  } else if (
+                                    field.type === "image" ||
+                                    field.type === "document"
+                                  ) {
+                                    initialData[field.key] = null;
+                                  } else {
+                                    initialData[field.key] = "";
+                                  }
+                                }
+                              );
+                              setLocationFormData(initialData);
+                            } else {
+                              alert("Failed to add location");
+                            }
+                          } catch (error) {
+                            console.error("Error:", error);
+                            alert("Error adding location");
+                          }
+                        }}
+                        className="w-full py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition cursor-pointer hover:scale-102"
+                      >
+                        Add Location
+                      </button>
+                    </div>
+                  ) : (
+                    // View Locations Tab
+                    <div className="p-4">
+                      {forms.filter(
+                        (f) => f.templateId === selectedTemplateForForm.id
+                      ).length > 0 ? (
+                        <div className="space-y-3">
+                          {forms
+                            .filter(
+                              (f) => f.templateId === selectedTemplateForForm.id
+                            )
+                            .map((form) => {
+                              const province = getProvinceFromCoordinates(
+                                form.data.place.lat,
+                                form.data.place.lng
+                              );
+                              return (
+                                <div
+                                  key={form.id}
+                                  className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition cursor-pointer"
+                                  onClick={() => {
+                                    // Center map on this location
+                                    if (map.current) {
+                                      map.current.flyTo({
+                                        center: [
+                                          form.data.place.lng,
+                                          form.data.place.lat,
+                                        ],
+                                        zoom: 14,
+                                        duration: 1500,
+                                      });
+                                    }
+                                    // Show the form details
+                                    setHoveredForm(form);
+                                  }}
+                                >
+                                  <div className="flex items-start justify-between mb-2">
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <MapPin
+                                          size={16}
+                                          className="text-gray-600"
+                                        />
+                                        <span className="text-xs font-medium text-gray-600">
+                                          {form.data.place.lat.toFixed(4)},{" "}
+                                          {form.data.place.lng.toFixed(4)}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <div
+                                          className="w-2 h-2 rounded-full"
+                                          style={{
+                                            backgroundColor:
+                                              provinceColors[province] ||
+                                              "#ef4444",
+                                          }}
+                                        />
+                                        <span className="text-xs text-gray-500">
+                                          {province}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Display form data */}
+                                  <div className="mt-3 space-y-2">
+                                    {selectedTemplateForForm.dynamicFields.map(
+                                      (field) => {
+                                        const value = form.data[field.key];
+                                        if (
+                                          value &&
+                                          value !== "" &&
+                                          !(value instanceof File)
+                                        ) {
+                                          return (
+                                            <div
+                                              key={field.key}
+                                              className="text-sm"
+                                            >
+                                              <span className="font-medium text-gray-700">
+                                                {field.label}:
+                                              </span>{" "}
+                                              <span className="text-gray-600">
+                                                {typeof value === "object" &&
+                                                "lat" in value
+                                                  ? `${value.lat}, ${value.lng}`
+                                                  : value.toString()}
+                                              </span>
+                                            </div>
+                                          );
+                                        }
+                                        return null;
+                                      }
+                                    )}
+                                  </div>
+
+                                  <div className="mt-3 pt-3 border-t border-gray-200 text-xs text-gray-500">
+                                    Added:{" "}
+                                    {new Date(form.createdAt).toLocaleString()}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-gray-500">
+                          No locations added yet for this template.
+                        </div>
                       )}
                     </div>
-                  );
-                })}
-
-                <button
-                  onClick={async () => {
-                    // Validate required fields
-                    if (
-                      !locationFormData.place.latitude ||
-                      !locationFormData.place.longitude
-                    ) {
-                      alert("Please provide latitude and longitude");
-                      return;
-                    }
-
-                    // Submit form
-                    const formData = new FormData();
-                    formData.append("templateId", selectedTemplateForForm.id);
-                    formData.append(
-                      "place.lat",
-                      locationFormData.place.latitude.toString()
-                    );
-                    formData.append(
-                      "place.lng",
-                      locationFormData.place.longitude.toString()
-                    );
-
-                    // selectedTemplateForForm.dynamicFields.forEach((field) => {
-                    //   const value = locationFormData[field.key];
-                    //   if (
-                    //     value !== null &&
-                    //     value !== undefined &&
-                    //     value !== ""
-                    //   ) {
-                    //     formData.append(field.key, value.toString());
-                    //   }
-                    // });
-
-                    selectedTemplateForForm.dynamicFields.forEach((field) => {
-                      const value = locationFormData[field.key];
-                      if (
-                        value !== null &&
-                        value !== undefined &&
-                        value !== ""
-                      ) {
-                        if (value instanceof File) {
-                          // Append file directly
-                          formData.append(field.key, value);
-                        } else if (
-                          typeof value === "object" &&
-                          "latitude" in value
-                        ) {
-                          // Handle place type (already handled by fixedFields)
-                          // Skip to avoid duplication
-                        } else {
-                          // Append as string
-                          formData.append(field.key, value.toString());
-                        }
-                      }
-                    });
-
-                    try {
-                      const response = await fetch(
-                        "http://192.168.1.147:3000/api/form/create",
-                        {
-                          method: "POST",
-                          headers: {
-                            Authorization: "Bearer YOUR_SECRET_TOKEN",
-                          },
-                          body: formData,
-                        }
-                      );
-
-                      if (response.ok) {
-                        alert("Location added successfully!");
-                        loadAllForms(); // Refresh the forms
-                        setActiveView("templates"); // Go back to templates view
-                      } else {
-                        alert("Failed to add location");
-                      }
-                    } catch (error) {
-                      console.error("Error:", error);
-                      alert("Error adding location");
-                    }
-                  }}
-                  className="w-full py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition cursor-pointer hover:scale-102"
-                >
-                  Add Location
-                </button>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="p-4">
