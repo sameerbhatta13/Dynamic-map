@@ -1,10 +1,10 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import SignupPage from "./features/auth/pages/Signup";
-import "./App.css";
 import CreateTemplate from "./features/template/pages/CreateTemplate";
-import InteractiveMap from "./features/maps/pages/InteractiveMap";
+import InteractiveMapp from "./features/maps/pages/InteractiveMapp";
 import ViewTemplates from "./features/template/components/ViewTemplate";
 import LocationForm from "./features/template/components/LocationForm";
+import InteractiveMap from "./features/maps/pages/InteractiveMap";
 
 function App() {
   return (
@@ -15,6 +15,7 @@ function App() {
         <Route path="/view-template" element={<ViewTemplates />} />
         <Route path="/add-location/:templateId" element={<LocationForm />} />
         <Route path="/interactive-map" element={<InteractiveMap />} />
+        <Route path="/interactive-mapp" element={<InteractiveMapp />} />
 
         {/* Optional: Add a redirect or 404 page */}
         <Route
