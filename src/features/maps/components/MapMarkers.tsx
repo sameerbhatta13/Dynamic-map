@@ -25,6 +25,7 @@ export const useMapMarkers = ({
   onMarkerLeave,
 }: MapMarkersProps) => {
   const markers = useRef<maplibregl.Marker[]>([]);
+  const formsRef = useRef<Form[]>([]);
 
   // Store callbacks in refs to avoid recreating markers
   const onMarkerClickRef = useRef(onMarkerClick);
@@ -37,7 +38,12 @@ export const useMapMarkers = ({
     onMarkerLeaveRef.current = onMarkerLeave;
   }, [onMarkerClick, onMarkerHover, onMarkerLeave]);
 
-  // Render markers
+  // Update formsRef when forms change
+  useEffect(() => {
+    formsRef.current = forms;
+  }, [forms]);
+
+  // Render markers - only when map loads or forms identity changes
   useEffect(() => {
     if (!mapLoaded || !map || forms.length === 0) return;
 
@@ -115,9 +121,10 @@ export const useMapMarkers = ({
       markers.current.forEach((marker) => marker?.remove());
       markers.current = [];
     };
-  }, [forms, mapLoaded, map, getProvince, hoveredProvince]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapLoaded, map, getProvince, forms.length]);
 
-  // Add this effect after the existing marker rendering effect
+  // Handle province hover styling - independent of marker recreation
   useEffect(() => {
     if (!mapLoaded || !map) return;
 
@@ -148,11 +155,11 @@ export const useMapMarkers = ({
           style.id = styleId;
           style.textContent = `
           @keyframes pulse-glow-${colorHex.replace("#", "")} {
-            0%, 100% { 
+            0%, 100% {
               transform: scale(1);
               box-shadow: 0 0 20px ${colorHex}, 0 4px 12px rgba(0, 0, 0, 0.4);
             }
-            50% { 
+            50% {
               transform: scale(1.1);
               box-shadow: 0 0 30px ${colorHex}, 0 6px 16px rgba(0, 0, 0, 0.5);
             }

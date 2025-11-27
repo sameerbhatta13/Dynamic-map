@@ -4,6 +4,7 @@ import HoverModal from "../components/HoverModal";
 import { Sidebar } from "../../sidebar/components/Sidebar";
 import { LocationBanner } from "../components/LocationBanner";
 import { ProvinceInfo } from "../components/ProvinceInfo";
+import { FilterBar } from "../components/FilterBar";
 import { useMapLibre } from "../../../hooks/useMapLibre";
 import { useTemplates } from "../../../hooks/useTemplates";
 import { useForms } from "../../../hooks/useForms";
@@ -26,6 +27,10 @@ declare global {
 export default function InteractiveMap() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Filter states
+  const [selectedProvinces, setSelectedProvinces] = useState<string[]>([]);
+  const [selectedTemplates, setSelectedTemplates] = useState<string[]>([]);
 
   // Hover states
   const [hoveredForm, setHoveredForm] = useState<Form | null>(null);
@@ -58,6 +63,29 @@ export default function InteractiveMap() {
   } = useTemplates();
   const { forms, loadAllForms, createForm } = useForms();
   const { setProvincesData, getProvince } = useProvinceDetection();
+
+  // Filter forms based on selected filters
+  const filteredForms = forms.filter((form) => {
+    // Filter by province
+    if (selectedProvinces.length > 0) {
+      const formProvince = getProvince(
+        form.data.place.lat,
+        form.data.place.lng
+      );
+      if (!selectedProvinces.includes(formProvince)) {
+        return false;
+      }
+    }
+
+    // Filter by template
+    if (selectedTemplates.length > 0) {
+      if (!selectedTemplates.includes(form.templateId)) {
+        return false;
+      }
+    }
+
+    return true;
+  });
 
   // Map initialization
   const { mapContainer, map, mapLoaded } = useMapLibre({
@@ -95,7 +123,6 @@ export default function InteractiveMap() {
     }, 150);
   }, []);
 
-  // Use a function that doesn't need memoization for marker click
   const handleMarkerClick = (form: Form, event: MouseEvent) => {
     event.stopPropagation();
 
@@ -118,7 +145,6 @@ export default function InteractiveMap() {
     setModalPosition(null);
   }, []);
 
-  // Use a function that doesn't need memoization for marker hover
   const handleMarkerHover = (form: Form, lng: number, lat: number) => {
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
@@ -130,31 +156,101 @@ export default function InteractiveMap() {
     }
   };
 
-  const onProvinceHover = useCallback((province: string, filtered: Form[]) => {
-    setHoveredProvince(province);
-    setFilteredByHover(filtered);
-  }, []);
+  // const onProvinceHover = useCallback((province: string, filtered: Form[]) => {
+  //   setHoveredProvince(province);
+  //   setFilteredByHover(filtered);
+  // }, []);
+
+  const onProvinceHover = useCallback(
+    (province: string, filtered: Form[]) => {
+      setHoveredProvince(province);
+      // Filter from ALL forms, not pre-filtered forms
+      const formsInProvince = forms.filter((form) => {
+        const formProvince = getProvince(
+          form.data.place.lat,
+          form.data.place.lng
+        );
+        return formProvince === province;
+      });
+      setFilteredByHover(formsInProvince);
+    },
+    [forms, getProvince]
+  );
 
   const onProvinceLeave = useCallback(() => {
     setHoveredProvince(null);
     setFilteredByHover([]);
   }, []);
 
-  // Province layer
+  // Filter handlers
+  const handleProvinceToggle = (province: string) => {
+    setSelectedProvinces((prev) =>
+      prev.includes(province)
+        ? prev.filter((p) => p !== province)
+        : [...prev, province]
+    );
+  };
+
+  const handleTemplateToggle = (templateId: string) => {
+    setSelectedTemplates((prev) =>
+      prev.includes(templateId)
+        ? prev.filter((t) => t !== templateId)
+        : [...prev, templateId]
+    );
+  };
+
+  const handleClearFilters = () => {
+    setSelectedProvinces([]);
+    setSelectedTemplates([]);
+  };
+
+  // Add these new handler functions after your existing filter handlers
+  const handleSelectAllProvinces = () => {
+    if (selectedProvinces.length === 0 || selectedProvinces.length === 7) {
+      // If all are selected or none selected, deselect all
+      setSelectedProvinces([]);
+    } else {
+      // Select all provinces
+      setSelectedProvinces([
+        "Koshi Province",
+        "Madhesh Province",
+        "Bagmati Province",
+        "Gandaki Province",
+        "Lumbini Province",
+        "Karnali Province",
+        "Sudurpaschim Province",
+      ]);
+    }
+  };
+
+  const handleSelectAllTemplates = () => {
+    if (
+      selectedTemplates.length === 0 ||
+      selectedTemplates.length === templates.length
+    ) {
+      // If all are selected or none selected, deselect all
+      setSelectedTemplates([]);
+    } else {
+      // Select all templates
+      setSelectedTemplates(templates.map((t) => t.id));
+    }
+  };
+
+  // Province layer - use filteredForms
   useProvinceLayer({
     map: map.current,
-    forms,
+    forms: forms,
     getProvince,
     onProvinceHover,
     onProvinceLeave,
     setProvincesData,
   });
 
-  // Markers
+  // Markers - use filteredForms
   useMapMarkers({
     map: map.current,
     mapLoaded,
-    forms,
+    forms: filteredForms,
     hoveredProvince,
     getProvince,
     onMarkerClick: handleMarkerClick,
@@ -187,12 +283,10 @@ export default function InteractiveMap() {
     };
   }, [hoveredForm]);
 
-  // Load templates when sidebar opens
+  // Load templates when sidebar opens or on mount
   useEffect(() => {
-    if (sidebarOpen && activeView === "templates") {
-      loadTemplates();
-    }
-  }, [sidebarOpen, activeView, loadTemplates]);
+    loadTemplates();
+  }, [loadTemplates]);
 
   // Cleanup hover timeout
   useEffect(() => {
@@ -343,6 +437,18 @@ export default function InteractiveMap() {
             className="w-full px-3 py-2 border-none outline-none text-sm"
           />
         </div>
+
+        {/* Filter Bar */}
+        <FilterBar
+          templates={templates}
+          selectedProvinces={selectedProvinces}
+          selectedTemplates={selectedTemplates}
+          onProvinceToggle={handleProvinceToggle}
+          onTemplateToggle={handleTemplateToggle}
+          onClearFilters={handleClearFilters}
+          onSelectAllProvinces={handleSelectAllProvinces}
+          onSelectAllTemplates={handleSelectAllTemplates}
+        />
       </div>
 
       {hoveredProvince && (
@@ -381,7 +487,7 @@ export default function InteractiveMap() {
         onLocationFormDataChange={setLocationFormData}
         onSetLocationInMap={() => setIsSettingLocation(true)}
         onSubmitLocation={handleSubmitLocation}
-        forms={forms}
+        forms={filteredForms}
         getProvince={getProvince}
         onLocationClick={handleLocationClick}
         onCreateTemplate={handleCreateTemplate}
