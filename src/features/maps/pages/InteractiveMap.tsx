@@ -60,8 +60,10 @@ export default function InteractiveMap() {
     isLoading: isLoadingTemplates,
     loadTemplates,
     createTemplate,
+    deleteTemplate,
   } = useTemplates();
-  const { forms, loadAllForms, createForm } = useForms();
+  const { forms, loadAllForms, createForm, updateForm, deleteForm } =
+    useForms();
   const { setProvincesData, getProvince } = useProvinceDetection();
 
   // Filter forms based on selected filters
@@ -86,6 +88,38 @@ export default function InteractiveMap() {
 
     return true;
   });
+
+  const handleDeleteTemplate = async (templateId: string) => {
+    const result = await deleteTemplate(templateId);
+    if (result.success) {
+      alert("Template deleted successfully!");
+      // If the deleted template was selected, clear the selection
+      if (selectedTemplateForForm?.id === templateId) {
+        setSelectedTemplateForForm(null);
+        setActiveView("templates");
+      }
+    } else {
+      alert(`Failed to delete template: ${result.error}`);
+    }
+  };
+
+  const handleUpdateForm = async (formId: string, formData: FormData) => {
+    const result = await updateForm(formId, formData);
+    if (result.success) {
+      alert("Location updated successfully!");
+    } else {
+      alert(`Failed to update location: ${result.error}`);
+    }
+  };
+
+  const handleDeleteForm = async (formId: string) => {
+    const result = await deleteForm(formId);
+    if (result.success) {
+      alert("Location deleted successfully!");
+    } else {
+      alert(`Failed to delete location: ${result.error}`);
+    }
+  };
 
   // Map initialization
   const { mapContainer, map, mapLoaded } = useMapLibre({
@@ -491,6 +525,9 @@ export default function InteractiveMap() {
         getProvince={getProvince}
         onLocationClick={handleLocationClick}
         onCreateTemplate={handleCreateTemplate}
+        onDeleteTemplate={handleDeleteTemplate}
+        onUpdateForm={handleUpdateForm}
+        onDeleteForm={handleDeleteForm}
       />
 
       {!mapLoaded && (

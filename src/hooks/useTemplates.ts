@@ -64,5 +64,40 @@ export const useTemplates = () => {
     [loadTemplates]
   );
 
-  return { templates, isLoading, loadTemplates, createTemplate };
+  const deleteTemplate = useCallback(
+    async (templateId: string) => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/template/${templateId}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: API_TOKEN,
+          },
+        });
+
+        if (response.status === 204) {
+          // Template deleted successfully
+          await loadTemplates();
+          return { success: true };
+        } else if (response.status === 404) {
+          return { success: false, error: "Template not found" };
+        } else if (response.status === 401) {
+          return { success: false, error: "Unauthorized" };
+        } else {
+          return { success: false, error: "Failed to delete template" };
+        }
+      } catch (error) {
+        console.error("Error deleting template:", error);
+        return { success: false, error: "Network error" };
+      }
+    },
+    [loadTemplates]
+  );
+
+  return {
+    templates,
+    isLoading,
+    loadTemplates,
+    createTemplate,
+    deleteTemplate,
+  };
 };

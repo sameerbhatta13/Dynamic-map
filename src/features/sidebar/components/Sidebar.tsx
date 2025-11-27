@@ -35,6 +35,9 @@ interface SidebarProps {
     markerIcon: string;
     fields: TemplateField[];
   }) => Promise<void>;
+  onDeleteTemplate: (templateId: string) => void;
+  onUpdateForm: (formId: string, formData: FormData) => void;
+  onDeleteForm: (formId: string) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -56,6 +59,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   getProvince,
   onLocationClick,
   onCreateTemplate,
+  onDeleteTemplate,
+  onUpdateForm,
+  onDeleteForm,
 }) => {
   if (!isOpen) return null;
 
@@ -180,6 +186,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     template={selectedTemplateForForm}
                     getProvince={getProvince}
                     onLocationClick={onLocationClick}
+                    onUpdateForm={onUpdateForm}
+                    onDeleteForm={onDeleteForm}
+                    onSetLocationInMap={onSetLocationInMap}
+                    editFormData={locationFormData}
+                    onEditFormDataChange={onLocationFormDataChange}
                   />
                 </div>
               )}
@@ -191,6 +202,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               templates={templates}
               isLoading={isLoadingTemplates}
               onSelectTemplate={onSelectTemplate}
+              onDeleteTemplate={onDeleteTemplate}
             />
           </div>
         )}

@@ -1,5 +1,5 @@
 import React from "react";
-import { MapPin } from "lucide-react";
+import { MapPin, Trash2 } from "lucide-react";
 import type { Template } from "../../../utils/types";
 import { MARKER_ICONS } from "../../../utils/constants";
 
@@ -7,13 +7,31 @@ interface TemplateListProps {
   templates: Template[];
   isLoading: boolean;
   onSelectTemplate: (template: Template) => void;
+  onDeleteTemplate: (templateId: string) => void;
 }
 
 export const TemplateList: React.FC<TemplateListProps> = ({
   templates,
   isLoading,
   onSelectTemplate,
+  onDeleteTemplate,
 }) => {
+  const handleDelete = async (
+    e: React.MouseEvent,
+    templateId: string,
+    templateName: string
+  ) => {
+    e.stopPropagation();
+
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${templateName}"? This action cannot be undone.`
+    );
+
+    if (confirmed) {
+      onDeleteTemplate(templateId);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="text-center py-8 text-gray-500">Loading templates...</div>
@@ -56,13 +74,30 @@ export const TemplateList: React.FC<TemplateListProps> = ({
             <span>{template.dynamicFields.length} fields</span>
             <span>{new Date(template.createdAt).toLocaleDateString()}</span>
           </div>
-          <button
+          {/* <button
             className="w-full py-2 bg-purple-100 hover:text-white text-sm font-medium rounded hover:bg-purple-500 border border-purple-600 transition flex items-center justify-center gap-2 cursor-pointer hover:scale-102"
             onClick={() => onSelectTemplate(template)}
           >
             <MapPin size={16} />
             Locations
-          </button>
+          </button> */}
+          <div className="flex gap-2">
+            <button
+              className="flex-1 py-2 bg-purple-100 hover:text-white text-sm font-medium rounded hover:bg-purple-500 border border-purple-600 transition flex items-center justify-center gap-2 cursor-pointer hover:scale-102"
+              onClick={() => onSelectTemplate(template)}
+            >
+              <MapPin size={16} />
+              Locations
+            </button>
+
+            <button
+              className="py-2 px-3 bg-red-100 hover:text-white text-sm font-medium rounded hover:bg-red-500 border border-red-600 transition flex items-center justify-center cursor-pointer hover:scale-102"
+              onClick={(e) => handleDelete(e, template.id, template.name)}
+              title="Delete template"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
         </div>
       ))}
     </div>
