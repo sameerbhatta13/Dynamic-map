@@ -49,5 +49,8 @@ export const NEPAL_BOUNDS: [[number, number], [number, number]] = [
   [90.5, 32.5],
 ];
 
-export const API_BASE_URL = "http://192.168.1.147:3000/api";
+export const API_BASE_URL = "http://localhost:5173/api";
 export const API_TOKEN = "Bearer YOUR_SECRET_TOKEN";
+
+export const APP_BASE_URL =
+  import.meta.env.VITE_APP_URL || "http://localhost:5173";
