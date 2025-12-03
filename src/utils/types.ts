@@ -1,7 +1,15 @@
 export interface TemplateField {
   key: string;
   label: string;
-  type: "string" | "number" | "date" | "time" | "image" | "document" | "place";
+  type:
+    | "text"
+    | "number"
+    | "date"
+    | "time"
+    | "image"
+    | "document"
+    | "place"
+    | "link";
   required: boolean;
   description?: string;
 }
@@ -20,6 +28,7 @@ export interface Template {
 export interface Form {
   id: string;
   templateId: string;
+  status: "created" | "ongoing" | "completed";
   data: {
     place: {
       lat: number;
@@ -36,6 +45,7 @@ export interface LocationFormData {
     latitude: number;
     longitude: number;
   };
+  status: "created" | "ongoing" | "completed";
   [key: string]:
     | string
     | number

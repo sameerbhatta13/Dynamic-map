@@ -19,24 +19,21 @@ export const NewTemplateForm: React.FC<NewTemplateFormProps> = ({
   const [templateDescription, setTemplateDescription] = useState("");
   const [selectedIcon, setSelectedIcon] = useState("location");
   const [fields, setFields] = useState<TemplateField[]>([
-    { key: "", label: "", type: "string", required: false, description: "" },
+    { key: "", label: "", type: "text", required: false, description: "" },
   ]);
 
-  // Add this helper function at the top of the component (inside NewTemplateForm)
   const generateUniqueKey = (
     label: string,
     existingFields: TemplateField[],
     currentIndex?: number
   ): string => {
-    // Convert label to key format: lowercase, remove spaces/symbols, keep only alphanumeric
     const baseKey = label
       .toLowerCase()
-      .replace(/[^a-z0-9]/g, "") // Remove all non-alphanumeric characters
+      .replace(/[^a-z0-9]/g, "")
       .trim();
 
-    if (!baseKey) return "field"; // Fallback for empty labels
+    if (!baseKey) return "field";
 
-    // Check for duplicates (excluding the current field being edited)
     const existingKeys = existingFields
       .map((f, idx) =>
         currentIndex !== undefined && idx === currentIndex ? null : f.key
@@ -57,7 +54,7 @@ export const NewTemplateForm: React.FC<NewTemplateFormProps> = ({
   const addField = () => {
     setFields([
       ...fields,
-      { key: "", label: "", type: "string", required: false, description: "" },
+      { key: "", label: "", type: "text", required: false, description: "" },
     ]);
   };
 
@@ -67,17 +64,10 @@ export const NewTemplateForm: React.FC<NewTemplateFormProps> = ({
     }
   };
 
-  // const updateField = (index: number, field: Partial<TemplateField>) => {
-  //   const updatedFields = [...fields];
-  //   updatedFields[index] = { ...updatedFields[index], ...field };
-  //   setFields(updatedFields);
-  // };
-
   const updateField = (index: number, field: Partial<TemplateField>) => {
     const updatedFields = [...fields];
     updatedFields[index] = { ...updatedFields[index], ...field };
 
-    // Auto-generate key when label changes
     if (field.label !== undefined) {
       updatedFields[index].key = generateUniqueKey(
         field.label,
@@ -132,7 +122,7 @@ export const NewTemplateForm: React.FC<NewTemplateFormProps> = ({
     setTemplateDescription("");
     setSelectedIcon("location");
     setFields([
-      { key: "", label: "", type: "string", required: false, description: "" },
+      { key: "", label: "", type: "text", required: false, description: "" },
     ]);
   };
 
@@ -199,13 +189,6 @@ export const NewTemplateForm: React.FC<NewTemplateFormProps> = ({
               className="p-3 border border-gray-200 rounded-lg space-y-2"
             >
               <div className="flex justify-end">
-                {/* <input
-                  type="text"
-                  placeholder="Field Key"
-                  value={field.key}
-                  onChange={(e) => updateField(index, { key: e.target.value })}
-                  className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                /> */}
                 <button
                   onClick={() => removeField(index)}
                   className="p-1.5 text-red-500 hover:bg-red-50 rounded cursor-pointer hover:scale-102"
@@ -232,13 +215,14 @@ export const NewTemplateForm: React.FC<NewTemplateFormProps> = ({
                 }
                 className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
-                <option value="string">String</option>
+                <option value="text">Text</option>
                 <option value="number">Number</option>
                 <option value="date">Date</option>
                 <option value="time">Time</option>
                 <option value="image">Image</option>
                 <option value="document">Document</option>
                 <option value="place">Place</option>
+                <option value="link">Link</option>
               </select>
 
               <label className="flex items-center gap-2 text-sm">

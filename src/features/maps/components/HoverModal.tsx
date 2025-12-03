@@ -1,11 +1,7 @@
 import { useEffect, useState } from "react";
 import {
-  Plus,
-  Trash2,
   X,
   MapPin,
-  Settings,
-  ArrowLeft,
   Calendar,
   Pin,
   AlertTriangle,
@@ -18,26 +14,7 @@ import {
   Info,
   Hospital,
 } from "lucide-react";
-
-interface Form {
-  id: string;
-  templateId: string;
-  data: {
-    place: {
-      lat: number;
-      lng: number;
-    };
-    [key: string]: string | number | { lat: number; lng: number } | File;
-  };
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface Template {
-  id: string;
-  name: string;
-  markerIcon: string;
-}
+import type { Form, Template } from "../../../utils/types";
 
 interface HoverModalProps {
   form: Form;
@@ -45,16 +22,6 @@ interface HoverModalProps {
   position: { x: number; y: number };
   onClose?: () => void;
 }
-
-// const provinceColors: Record<string, string> = {
-//   Koshi: "#ef4444",
-//   Madhesh: "#f97316",
-//   Bagmati: "#eab308",
-//   Gandaki: "#22c55e",
-//   Lumbini: "#06b6d4",
-//   Karnali: "#8b5cf6",
-//   Sudurpaschim: "#ec4899",
-// };
 
 const MARKER_ICONS = [
   { id: "location", icon: MapPin },
@@ -120,7 +87,7 @@ export default function HoverModal({
 
   if (!form) return null;
 
-  const color = "#6b7280"; // Default gray
+  const color = "#6b7280";
   const modalWidth = 320;
   const modalHeight = 300;
 
@@ -189,7 +156,7 @@ export default function HoverModal({
             )}
           </div>
         </div>
-        <div className="p-4 space-y-3">
+        <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
           <div>
             <p className="text-xs font-semibold text-gray-600 mb-1">Location</p>
             <p className="text-sm text-gray-900">
@@ -197,18 +164,88 @@ export default function HoverModal({
             </p>
           </div>
 
-          {Object.entries(form.data).map(([key, value]) => {
-            if (key === "place") return null;
+          {template?.dynamicFields.map((field) => {
+            const value = form.data[field.key];
+            if (!value || value === "" || value instanceof File) {
+              return null;
+            }
 
+            // Handle file fields (document/image)
+            if (field.type === "document" || field.type === "image") {
+              let fileData;
+              if (typeof value === "string") {
+                try {
+                  fileData = JSON.parse(value);
+                } catch {
+                  fileData = null;
+                }
+              } else if (typeof value === "object" && "url" in value) {
+                fileData = value;
+              }
+
+              if (fileData && fileData.url) {
+                return (
+                  <div key={field.key}>
+                    <p className="text-xs font-semibold text-gray-600 mb-1">
+                      {field.label}
+                    </p>
+                    <a
+                      href={fileData.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      View {field.type === "image" ? "Image" : "Document"}
+                    </a>
+                  </div>
+                );
+              }
+              return null;
+            }
+
+            // Handle place fields
+            if (typeof value === "object" && "lat" in value) {
+              return (
+                <div key={field.key}>
+                  <p className="text-xs font-semibold text-gray-600 mb-1">
+                    {field.label}
+                  </p>
+                  <p className="text-sm text-gray-900">
+                    {value.lat}, {value.lng}
+                  </p>
+                </div>
+              );
+            }
+
+            // Handle link fields
+            if (field.type === "link" && typeof value === "string") {
+              return (
+                <div key={field.key}>
+                  <p className="text-xs font-semibold text-gray-600 mb-1">
+                    {field.label}
+                  </p>
+                  <a
+                    href={value}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:text-blue-800 hover:underline break-all"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {value}
+                  </a>
+                </div>
+              );
+            }
+
+            // Handle all other fields (text, number, date, time)
             return (
-              <div key={key}>
-                <p className="text-xs font-semibold text-gray-600 mb-1 capitalize">
-                  {key.replace(/_/g, " ")}
+              <div key={field.key}>
+                <p className="text-xs font-semibold text-gray-600 mb-1">
+                  {field.label}
                 </p>
                 <p className="text-sm text-gray-900 break-words">
-                  {typeof value === "object" && value !== null
-                    ? JSON.stringify(value)
-                    : String(value)}
+                  {value.toString()}
                 </p>
               </div>
             );

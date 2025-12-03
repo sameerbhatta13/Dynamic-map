@@ -91,10 +91,27 @@ export const useMapLibre = ({
       );
 
       // Use refs instead of captured values
+      // map.current.on("click", (e) => {
+      //   if (isSettingLocationRef.current) {
+      //     onMapClickForLocationRef.current(e);
+      //   } else {
+      //     onMapClickRef.current();
+      //   }
+      // });
+
       map.current.on("click", (e) => {
+        // Check if click was on a marker
+        const target = e.originalEvent.target as HTMLElement;
+        const isMarkerClick = target.closest('[data-marker="true"]');
+
         if (isSettingLocationRef.current) {
           onMapClickForLocationRef.current(e);
-        } else {
+        } else if (!isMarkerClick) {
+          // Only clear locked markers and close modal if not clicking on a marker
+          const allMarkers = document.querySelectorAll('[data-marker="true"]');
+          allMarkers.forEach((m) => {
+            m.removeAttribute("data-locked");
+          });
           onMapClickRef.current();
         }
       });
