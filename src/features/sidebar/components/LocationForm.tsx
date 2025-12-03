@@ -24,6 +24,27 @@ export const LocationForm: React.FC<LocationFormProps> = ({
         <p className="text-sm text-gray-600">{template.description}</p>
       </div>
 
+      {/* Status Selector */}
+      <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Status *
+        </label>
+        <select
+          value={formData.status}
+          onChange={(e) =>
+            onFormDataChange({
+              ...formData,
+              status: e.target.value as "created" | "ongoing" | "completed",
+            })
+          }
+          className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="created">Halted (Created)</option>
+          <option value="ongoing">Ongoing</option>
+          <option value="completed">Completed</option>
+        </select>
+      </div>
+
       {/* Location Coordinates */}
       <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
         <h4 className="text-sm font-semibold text-blue-900 mb-2 flex items-center gap-2">
@@ -93,7 +114,7 @@ export const LocationForm: React.FC<LocationFormProps> = ({
               {field.label} {field.required && "*"}
             </label>
 
-            {field.type === "string" && (
+            {field.type === "text" && (
               <input
                 type="text"
                 value={typeof fieldValue === "string" ? fieldValue : ""}
@@ -152,6 +173,26 @@ export const LocationForm: React.FC<LocationFormProps> = ({
               />
             )}
 
+            {field.type === "link" && (
+              <input
+                type="url"
+                value={typeof fieldValue === "string" ? fieldValue : ""}
+                onChange={(e) =>
+                  onFormDataChange({
+                    ...formData,
+                    [field.key]: e.target.value,
+                  })
+                }
+                placeholder={
+                  field.description ||
+                  "Enter full URL (e.g., https://example.com)"
+                }
+                pattern="https?://.+"
+                title="Please enter a valid URL starting with http:// or https://"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            )}
+
             {field.type === "image" && (
               <div>
                 <input
@@ -170,7 +211,7 @@ export const LocationForm: React.FC<LocationFormProps> = ({
                 />
                 {fieldValue instanceof File && (
                   <p className="text-xs text-green-600 mt-1">
-                    Selected: {(fieldValue as File).name}
+                    Selected: {fieldValue.name}
                   </p>
                 )}
               </div>
@@ -194,7 +235,7 @@ export const LocationForm: React.FC<LocationFormProps> = ({
                 />
                 {fieldValue instanceof File && (
                   <p className="text-xs text-green-600 mt-1">
-                    Selected: {(fieldValue as File).name}
+                    Selected: {fieldValue.name}
                   </p>
                 )}
               </div>

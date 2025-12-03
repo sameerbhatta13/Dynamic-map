@@ -19,6 +19,12 @@ export const NEPAL_BOUNDARIES = {
     "/geoBoundaries-NPL-ADM1/geoBoundaries-NPL-ADM1_simplified.geojson",
 };
 
+export const statusColors: Record<string, string> = {
+  created: "#ef4444", // Red for halted/created
+  ongoing: "#eab308", // Yellow for ongoing
+  completed: "#22c55e", // Green for completed
+};
+
 export const provinceColors: Record<string, string> = {
   "Koshi Province": "#ef4444",
   "Madhesh Province": "#f97316",
@@ -49,8 +55,8 @@ export const NEPAL_BOUNDS: [[number, number], [number, number]] = [
   [90.5, 32.5],
 ];
 
-export const API_BASE_URL = "http://localhost:5173/api";
+export const API_BASE_URL = "http://map-be.cellapp.co/api";
 export const API_TOKEN = "Bearer YOUR_SECRET_TOKEN";
 
 export const APP_BASE_URL =
-  import.meta.env.VITE_APP_URL || "http://localhost:5173";
+  import.meta.env.VITE_APP_URL || "http://map-be.cellapp.co";

@@ -1,5 +1,5 @@
 import React from "react";
-import { X, ArrowLeft, Settings } from "lucide-react";
+import { X, ArrowLeft } from "lucide-react";
 import type {
   Template,
   LocationFormData,
@@ -36,7 +36,10 @@ interface SidebarProps {
     fields: TemplateField[];
   }) => Promise<void>;
   onDeleteTemplate: (templateId: string) => void;
-  onUpdateForm: (formId: string, formData: FormData) => void;
+  onUpdateForm: (
+    formId: string,
+    formData: FormData
+  ) => Promise<{ success: boolean; error?: string }>;
   onDeleteForm: (formId: string) => void;
 }
 
@@ -182,6 +185,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
               ) : (
                 <div className="p-4">
                   <LocationsList
+                    key={`${selectedTemplateForForm.id}-${
+                      forms.filter(
+                        (f) => f.templateId === selectedTemplateForForm.id
+                      ).length
+                    }`}
                     forms={forms}
                     template={selectedTemplateForForm}
                     getProvince={getProvince}
@@ -189,8 +197,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     onUpdateForm={onUpdateForm}
                     onDeleteForm={onDeleteForm}
                     onSetLocationInMap={onSetLocationInMap}
-                    editFormData={locationFormData}
-                    onEditFormDataChange={onLocationFormDataChange}
+                    // editFormData={locationFormData}
+                    // onEditFormDataChange={onLocationFormDataChange}
                   />
                 </div>
               )}
