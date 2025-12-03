@@ -75,7 +75,7 @@ export const useProvinceLayer = ({
           source: "world",
           paint: {
             "fill-color": "#ffffff",
-            "fill-opacity": 0.8,
+            "fill-opacity": 1,
           },
         });
 
