@@ -22,6 +22,38 @@ export const NewTemplateForm: React.FC<NewTemplateFormProps> = ({
     { key: "", label: "", type: "string", required: false, description: "" },
   ]);
 
+  // Add this helper function at the top of the component (inside NewTemplateForm)
+  const generateUniqueKey = (
+    label: string,
+    existingFields: TemplateField[],
+    currentIndex?: number
+  ): string => {
+    // Convert label to key format: lowercase, remove spaces/symbols, keep only alphanumeric
+    const baseKey = label
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "") // Remove all non-alphanumeric characters
+      .trim();
+
+    if (!baseKey) return "field"; // Fallback for empty labels
+
+    // Check for duplicates (excluding the current field being edited)
+    const existingKeys = existingFields
+      .map((f, idx) =>
+        currentIndex !== undefined && idx === currentIndex ? null : f.key
+      )
+      .filter(Boolean);
+
+    let uniqueKey = baseKey;
+    let counter = 1;
+
+    while (existingKeys.includes(uniqueKey)) {
+      uniqueKey = `${baseKey}${counter}`;
+      counter++;
+    }
+
+    return uniqueKey;
+  };
+
   const addField = () => {
     setFields([
       ...fields,
@@ -35,9 +67,25 @@ export const NewTemplateForm: React.FC<NewTemplateFormProps> = ({
     }
   };
 
+  // const updateField = (index: number, field: Partial<TemplateField>) => {
+  //   const updatedFields = [...fields];
+  //   updatedFields[index] = { ...updatedFields[index], ...field };
+  //   setFields(updatedFields);
+  // };
+
   const updateField = (index: number, field: Partial<TemplateField>) => {
     const updatedFields = [...fields];
     updatedFields[index] = { ...updatedFields[index], ...field };
+
+    // Auto-generate key when label changes
+    if (field.label !== undefined) {
+      updatedFields[index].key = generateUniqueKey(
+        field.label,
+        updatedFields,
+        index
+      );
+    }
+
     setFields(updatedFields);
   };
 
@@ -150,14 +198,14 @@ export const NewTemplateForm: React.FC<NewTemplateFormProps> = ({
               key={index}
               className="p-3 border border-gray-200 rounded-lg space-y-2"
             >
-              <div className="flex gap-2">
-                <input
+              <div className="flex justify-end">
+                {/* <input
                   type="text"
                   placeholder="Field Key"
                   value={field.key}
                   onChange={(e) => updateField(index, { key: e.target.value })}
                   className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
+                /> */}
                 <button
                   onClick={() => removeField(index)}
                   className="p-1.5 text-red-500 hover:bg-red-50 rounded cursor-pointer hover:scale-102"

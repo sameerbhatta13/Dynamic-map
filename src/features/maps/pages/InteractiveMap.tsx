@@ -434,6 +434,49 @@ export default function InteractiveMap() {
     setHoveredForm(form);
   };
 
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
+
+    // Create country label markers
+    const countryLabels = [
+      { name: "CHINA", coordinates: [84.0, 30.0] as [number, number] },
+      { name: "INDIA", coordinates: [84.0, 25.0] as [number, number] },
+      { name: "INDIA", coordinates: [78.0, 28.0] as [number, number] },
+      { name: "INDIA", coordinates: [89.5, 26.5] as [number, number] },
+    ];
+
+    const markers: maplibregl.Marker[] = [];
+
+    countryLabels.forEach((label) => {
+      const el = document.createElement("div");
+      el.className = "country-label";
+      el.textContent = label.name;
+      el.style.cssText = `
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: 4px;
+      color: #666666;
+      text-shadow: 2px 2px 4px white, -2px -2px 4px white, 2px -2px 4px white, -2px 2px 4px white;
+      pointer-events: none;
+      user-select: none;
+    `;
+
+      const marker = new window.maplibregl.Marker({
+        element: el,
+        anchor: "center",
+      })
+        .setLngLat(label.coordinates)
+        .addTo(map.current!);
+
+      markers.push(marker);
+    });
+
+    // Cleanup
+    return () => {
+      markers.forEach((marker) => marker.remove());
+    };
+  }, [map, mapLoaded]);
+
   return (
     <div className="relative w-full h-screen">
       <div ref={mapContainer} className="w-full h-full" />
