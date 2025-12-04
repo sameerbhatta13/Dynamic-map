@@ -14,8 +14,10 @@ import { LocationsList } from "./LocationsList";
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  activeView: "templates" | "new" | "addLocation";
-  setActiveView: (view: "templates" | "new" | "addLocation") => void;
+  activeView: "allLocations" | "templates" | "new" | "addLocation";
+  setActiveView: (
+    view: "allLocations" | "templates" | "new" | "addLocation"
+  ) => void;
   templates: Template[];
   isLoadingTemplates: boolean;
   onSelectTemplate: (template: Template) => void;
@@ -107,8 +109,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <ArrowLeft size={18} />
             Back to Templates
           </button>
+        ) : activeView === "new" ? (
+          <button
+            onClick={() => {
+              setActiveView("templates");
+            }}
+            className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-800 cursor-pointer hover:scale-102"
+          >
+            <ArrowLeft size={18} />
+            Back to Templates
+          </button>
         ) : (
           <>
+            <button
+              onClick={() => setActiveView("allLocations")}
+              className={`flex-1 px-4 py-3 text-sm font-medium transition cursor-pointer hover:scale-102 ${
+                activeView === "allLocations"
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
+            >
+              All Locations
+            </button>
             <button
               onClick={() => setActiveView("templates")}
               className={`flex-1 px-4 py-3 text-sm font-medium transition cursor-pointer hover:scale-102 ${
@@ -119,19 +141,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             >
               Templates
             </button>
-            <button
-              onClick={() => setActiveView("new")}
-              className={`flex-1 px-4 py-3 text-sm font-medium transition cursor-pointer hover:scale-102 ${
-                activeView === "new"
-                  ? "text-blue-600 border-b-2 border-blue-600"
-                  : "text-gray-600 hover:text-gray-800"
-              }`}
-            >
-              New Template
-            </button>
-            {/* <button className="px-4 py-3 text-gray-400 hover:text-gray-600">
-              <Settings size={18} />
-            </button> */}
           </>
         )}
       </div>
@@ -139,7 +148,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
         {activeView === "new" ? (
-          <NewTemplateForm onCreateTemplate={onCreateTemplate} />
+          <NewTemplateForm
+            onCreateTemplate={async (data) => {
+              await onCreateTemplate(data);
+              setActiveView("templates");
+            }}
+          />
         ) : activeView === "addLocation" && selectedTemplateForForm ? (
           <div className="flex flex-col h-full">
             {/* Sub-tabs for Add/View */}
@@ -197,15 +211,78 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     onUpdateForm={onUpdateForm}
                     onDeleteForm={onDeleteForm}
                     onSetLocationInMap={onSetLocationInMap}
-                    // editFormData={locationFormData}
-                    // onEditFormDataChange={onLocationFormDataChange}
+                    locationFormData={locationFormData}
+                    onLocationFormDataChange={onLocationFormDataChange}
                   />
                 </div>
               )}
             </div>
           </div>
+        ) : activeView === "allLocations" ? (
+          <div className="p-4">
+            <div className="mb-4 pb-3 border-b-2 border-gray-200">
+              <h2 className="text-xl font-bold text-gray-900">
+                All Locations ({forms.length})
+              </h2>
+            </div>
+            {forms.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                No locations added yet.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {templates.map((template) => {
+                  const templateForms = forms.filter(
+                    (f) => f.templateId === template.id
+                  );
+                  if (templateForms.length === 0) return null;
+
+                  return (
+                    <div key={template.id} className="space-y-3">
+                      <div className="flex items-center gap-2 pb-2 border-b border-gray-300">
+                        <h3 className="font-semibold text-gray-800">
+                          {template.name}
+                        </h3>
+                        <span className="text-xs text-gray-500">
+                          ({templateForms.length})
+                        </span>
+                      </div>
+                      <LocationsList
+                        forms={forms}
+                        template={template}
+                        getProvince={getProvince}
+                        onLocationClick={onLocationClick}
+                        onUpdateForm={onUpdateForm}
+                        onDeleteForm={onDeleteForm}
+                        onSetLocationInMap={onSetLocationInMap}
+                        locationFormData={locationFormData} // ADD THIS
+                        onLocationFormDataChange={onLocationFormDataChange}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         ) : (
           <div className="p-4">
+            <button
+              onClick={() => setActiveView("new")}
+              className="w-full mb-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2 cursor-pointer hover:scale-101"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Create New Template
+            </button>
             <TemplateList
               templates={templates}
               isLoading={isLoadingTemplates}

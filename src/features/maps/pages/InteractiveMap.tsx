@@ -46,8 +46,8 @@ export default function InteractiveMap() {
   const [locationViewTab, setLocationViewTab] = useState<"add" | "view">("add");
 
   const [activeView, setActiveView] = useState<
-    "templates" | "new" | "addLocation"
-  >("new");
+    "allLocations" | "templates" | "new" | "addLocation"
+  >("allLocations");
   const [selectedTemplateForForm, setSelectedTemplateForForm] =
     useState<Template | null>(null);
   const [locationFormData, setLocationFormData] = useState<LocationFormData>({
@@ -103,15 +103,6 @@ export default function InteractiveMap() {
       alert(`Failed to delete template: ${result.error}`);
     }
   };
-
-  // const handleUpdateForm = async (formId: string, formData: FormData) => {
-  //   const result = await updateForm(formId, formData);
-  //   if (result.success) {
-  //     alert("Location updated successfully!");
-  //   } else {
-  //     alert(`Failed to update location: ${result.error}`);
-  //   }
-  // };
 
   const handleUpdateForm = async (
     formId: string,
@@ -209,11 +200,6 @@ export default function InteractiveMap() {
       setModalPosition({ x: point.x, y: point.y });
     }
   };
-
-  // const onProvinceHover = useCallback((province: string, filtered: Form[]) => {
-  //   setHoveredProvince(province);
-  //   setFilteredByHover(filtered);
-  // }, []);
 
   const onProvinceHover = useCallback(
     (province: string, _filtered: Form[]) => {
@@ -360,6 +346,7 @@ export default function InteractiveMap() {
     const result = await createTemplate(data);
     if (result.success) {
       alert("Template created successfully!");
+      setActiveView("templates");
     } else {
       alert(`Failed to create template: ${result.error}`);
     }
@@ -368,6 +355,7 @@ export default function InteractiveMap() {
   const handleSelectTemplate = (template: Template) => {
     setSelectedTemplateForForm(template);
     setActiveView("addLocation");
+    setLocationViewTab("view");
     const initialData: LocationFormData = {
       place: { latitude: 0, longitude: 0 },
       status: "ongoing",
@@ -729,6 +717,65 @@ export default function InteractiveMap() {
         />
       )}
 
+      {/* Status Legend */}
+      <div className="absolute top-1/3 right-1 sm:right-2 transform -translate-y-1/2 z-10">
+        <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-xl p-3 sm:p-4 border border-gray-200">
+          <div className="flex items-center gap-2 mb-2 sm:mb-3 pb-2 border-b border-gray-200">
+            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full animate-pulse" />
+            <h3 className="text-[10px] sm:text-xs font-bold text-gray-800 uppercase tracking-wide">
+              Location Index
+            </h3>
+          </div>
+          <div className="space-y-2 sm:space-y-3">
+            <div className="flex items-center gap-2 sm:gap-3 group cursor-default">
+              <div className="relative flex-shrink-0">
+                <div
+                  className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white shadow-lg transition-transform group-hover:scale-125"
+                  style={{ backgroundColor: "#ef4444" }}
+                />
+                <div
+                  className="absolute inset-0 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full animate-ping opacity-75"
+                  style={{ backgroundColor: "#ef4444" }}
+                />
+              </div>
+              <span className="text-[10px] sm:text-xs font-medium text-gray-700 group-hover:text-gray-900 transition-colors whitespace-nowrap">
+                Halted
+              </span>
+            </div>
+            <div className="flex items-center gap-2 sm:gap-3 group cursor-default">
+              <div className="relative flex-shrink-0">
+                <div
+                  className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white shadow-lg transition-transform group-hover:scale-125"
+                  style={{ backgroundColor: "#eab308" }}
+                />
+                <div
+                  className="absolute inset-0 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full animate-ping opacity-75"
+                  style={{ backgroundColor: "#eab308" }}
+                />
+              </div>
+              <span className="text-[10px] sm:text-xs font-medium text-gray-700 group-hover:text-gray-900 transition-colors whitespace-nowrap">
+                Ongoing
+              </span>
+            </div>
+            <div className="flex items-center gap-2 sm:gap-3 group cursor-default">
+              <div className="relative flex-shrink-0">
+                <div
+                  className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white shadow-lg transition-transform group-hover:scale-125"
+                  style={{ backgroundColor: "#22c55e" }}
+                />
+                <div
+                  className="absolute inset-0 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full animate-ping opacity-75"
+                  style={{ backgroundColor: "#22c55e" }}
+                />
+              </div>
+              <span className="text-[10px] sm:text-xs font-medium text-gray-700 group-hover:text-gray-900 transition-colors whitespace-nowrap">
+                Completed
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {hoveredForm && modalPosition && (
         <HoverModal
           form={hoveredForm}
@@ -744,7 +791,11 @@ export default function InteractiveMap() {
         activeView={activeView}
         setActiveView={(view) => {
           setActiveView(view);
-          if (view === "templates" || view === "new") {
+          if (
+            view === "templates" ||
+            view === "new" ||
+            view === "allLocations"
+          ) {
             setSelectedTemplateForForm(null);
           }
         }}

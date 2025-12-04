@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { MapPin } from "lucide-react";
 import type { Template, LocationFormData } from "../../../utils/types";
 
@@ -17,6 +17,18 @@ export const LocationForm: React.FC<LocationFormProps> = ({
   onSetLocation,
   onSubmit,
 }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await onSubmit();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="p-4 space-y-4">
       <div className="mb-4">
@@ -249,10 +261,15 @@ export const LocationForm: React.FC<LocationFormProps> = ({
       })}
 
       <button
-        onClick={onSubmit}
-        className="w-full py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition cursor-pointer hover:scale-102"
+        onClick={handleSubmit}
+        disabled={isSubmitting}
+        className={`w-full py-3 text-white font-semibold rounded-lg transition ${
+          isSubmitting
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-green-600 hover:bg-green-700 cursor-pointer hover:scale-102"
+        }`}
       >
-        Add Location
+        {isSubmitting ? "Adding Location..." : "Add Location"}
       </button>
     </div>
   );

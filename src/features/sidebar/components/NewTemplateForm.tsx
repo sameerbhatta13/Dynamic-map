@@ -21,6 +21,7 @@ export const NewTemplateForm: React.FC<NewTemplateFormProps> = ({
   const [fields, setFields] = useState<TemplateField[]>([
     { key: "", label: "", type: "text", required: false, description: "" },
   ]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const generateUniqueKey = (
     label: string,
@@ -79,7 +80,56 @@ export const NewTemplateForm: React.FC<NewTemplateFormProps> = ({
     setFields(updatedFields);
   };
 
+  // const handleSubmit = async () => {
+  //   if (!templateName || templateName.length < 3) {
+  //     alert("Template name must be at least 3 characters long");
+  //     return;
+  //   }
+
+  //   const validFields = fields.filter((f) => f.key && f.label);
+  //   if (validFields.length === 0) {
+  //     alert("Please add at least one valid field");
+  //     return;
+  //   }
+
+  //   const preparedFields = validFields.map((field) => {
+  //     const fieldData: {
+  //       key: string;
+  //       label: string;
+  //       type: TemplateField["type"];
+  //       required: boolean;
+  //       description?: string;
+  //     } = {
+  //       key: field.key,
+  //       label: field.label,
+  //       type: field.type,
+  //       required: field.required,
+  //     };
+  //     if (field.description && field.description.trim() !== "") {
+  //       fieldData.description = field.description;
+  //     }
+  //     return fieldData;
+  //   });
+
+  //   await onCreateTemplate({
+  //     name: templateName,
+  //     description: templateDescription,
+  //     markerIcon: selectedIcon,
+  //     fields: preparedFields,
+  //   });
+
+  //   // Reset form
+  //   setTemplateName("");
+  //   setTemplateDescription("");
+  //   setSelectedIcon("location");
+  //   setFields([
+  //     { key: "", label: "", type: "text", required: false, description: "" },
+  //   ]);
+  // };
+
   const handleSubmit = async () => {
+    if (isSubmitting) return; // Prevent double submission
+
     if (!templateName || templateName.length < 3) {
       alert("Template name must be at least 3 characters long");
       return;
@@ -110,20 +160,26 @@ export const NewTemplateForm: React.FC<NewTemplateFormProps> = ({
       return fieldData;
     });
 
-    await onCreateTemplate({
-      name: templateName,
-      description: templateDescription,
-      markerIcon: selectedIcon,
-      fields: preparedFields,
-    });
+    setIsSubmitting(true);
 
-    // Reset form
-    setTemplateName("");
-    setTemplateDescription("");
-    setSelectedIcon("location");
-    setFields([
-      { key: "", label: "", type: "text", required: false, description: "" },
-    ]);
+    try {
+      await onCreateTemplate({
+        name: templateName,
+        description: templateDescription,
+        markerIcon: selectedIcon,
+        fields: preparedFields,
+      });
+
+      // Reset form
+      setTemplateName("");
+      setTemplateDescription("");
+      setSelectedIcon("location");
+      setFields([
+        { key: "", label: "", type: "text", required: false, description: "" },
+      ]);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -253,7 +309,12 @@ export const NewTemplateForm: React.FC<NewTemplateFormProps> = ({
 
       <button
         onClick={handleSubmit}
-        className="w-full py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2 cursor-pointer hover:scale-102"
+        disabled={isSubmitting}
+        className={`w-full py-3 text-white font-medium rounded-lg transition flex items-center justify-center gap-2 ${
+          isSubmitting
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-blue-600 hover:bg-blue-700 cursor-pointer hover:scale-102"
+        }`}
       >
         <svg
           width="20"
@@ -266,7 +327,7 @@ export const NewTemplateForm: React.FC<NewTemplateFormProps> = ({
           <rect x="3" y="3" width="18" height="18" rx="2" />
           <path d="M9 3v18" />
         </svg>
-        Save Template
+        {isSubmitting ? "Creating..." : "Save Template"}
       </button>
     </div>
   );

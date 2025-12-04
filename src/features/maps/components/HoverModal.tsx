@@ -171,7 +171,44 @@ export default function HoverModal({
             }
 
             // Handle file fields (document/image)
-            if (field.type === "document" || field.type === "image") {
+            if (field.type === "image") {
+              let fileData;
+              if (typeof value === "string") {
+                try {
+                  fileData = JSON.parse(value);
+                } catch {
+                  fileData = null;
+                }
+              } else if (typeof value === "object" && "url" in value) {
+                fileData = value;
+              }
+
+              if (fileData && fileData.url) {
+                return (
+                  <div key={field.key}>
+                    <p className="text-xs font-semibold text-gray-600 mb-1">
+                      {field.label}
+                    </p>
+                    <a
+                      href={fileData.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="block"
+                    >
+                      <img
+                        src={fileData.url}
+                        alt={field.label}
+                        className="w-3/4 h-26 object-cover rounded border border-gray-200 hover:opacity-80 transition cursor-pointer"
+                      />
+                    </a>
+                  </div>
+                );
+              }
+              return null;
+            }
+
+            if (field.type === "document") {
               let fileData;
               if (typeof value === "string") {
                 try {
@@ -196,7 +233,7 @@ export default function HoverModal({
                       className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      View {field.type === "image" ? "Image" : "Document"}
+                      View Document
                     </a>
                   </div>
                 );
