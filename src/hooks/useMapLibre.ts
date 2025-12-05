@@ -90,15 +90,6 @@ export const useMapLibre = ({
         "top-right"
       );
 
-      // Use refs instead of captured values
-      // map.current.on("click", (e) => {
-      //   if (isSettingLocationRef.current) {
-      //     onMapClickForLocationRef.current(e);
-      //   } else {
-      //     onMapClickRef.current();
-      //   }
-      // });
-
       map.current.on("click", (e) => {
         // Check if click was on a marker
         const target = e.originalEvent.target as HTMLElement;

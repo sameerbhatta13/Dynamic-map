@@ -55,8 +55,9 @@ export const NEPAL_BOUNDS: [[number, number], [number, number]] = [
   [90.5, 32.5],
 ];
 
-export const API_BASE_URL = "http://map-be.cellapp.co/api";
+export const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "https://map-be.cellapp.co/api";
 export const API_TOKEN = "Bearer YOUR_SECRET_TOKEN";
 
 export const APP_BASE_URL =
-  import.meta.env.VITE_APP_URL || "http://map-be.cellapp.co";
+  import.meta.env.VITE_APP_URL || "https://map-be.cellapp.co";
