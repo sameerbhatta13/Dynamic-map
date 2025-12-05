@@ -74,13 +74,6 @@ export const TemplateList: React.FC<TemplateListProps> = ({
             <span>{template.dynamicFields.length} fields</span>
             <span>{new Date(template.createdAt).toLocaleDateString()}</span>
           </div>
-          {/* <button
-            className="w-full py-2 bg-purple-100 hover:text-white text-sm font-medium rounded hover:bg-purple-500 border border-purple-600 transition flex items-center justify-center gap-2 cursor-pointer hover:scale-102"
-            onClick={() => onSelectTemplate(template)}
-          >
-            <MapPin size={16} />
-            Locations
-          </button> */}
           <div className="flex gap-2">
             <button
               className="flex-1 py-2 bg-purple-100 hover:text-white text-sm font-medium rounded hover:bg-purple-500 border border-purple-600 transition flex items-center justify-center gap-2 cursor-pointer hover:scale-102"

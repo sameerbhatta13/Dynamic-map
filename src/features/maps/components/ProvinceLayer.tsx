@@ -47,7 +47,7 @@ export const useProvinceLayer = ({
           },
         });
 
-        // Add semi-transparent overlay outside Nepal
+        // Add overlay outside Nepal
         map.addSource("world", {
           type: "geojson",
           data: {
