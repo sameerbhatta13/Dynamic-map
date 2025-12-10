@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { X, ChevronDown, ChevronUp } from "lucide-react";
 import type { Template } from "../../../utils/types";
 import { provinceColors, MARKER_ICONS } from "../../../utils/constants";
@@ -36,6 +36,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 }) => {
   const [isProvinceOpen, setIsProvinceOpen] = useState(false);
   const [isTemplateOpen, setIsTemplateOpen] = useState(false);
+  const filterBarRef = useRef<HTMLDivElement>(null);
 
   const hasActiveFilters =
     selectedProvinces.length > 0 || selectedTemplates.length > 0;
@@ -47,13 +48,33 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     selectedTemplates.length === 0 ||
     selectedTemplates.length === templates.length;
 
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        filterBarRef.current &&
+        !filterBarRef.current.contains(event.target as Node)
+      ) {
+        setIsProvinceOpen(false);
+        setIsTemplateOpen(false);
+      }
+    };
+
+    if (isProvinceOpen || isTemplateOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [isProvinceOpen, isTemplateOpen]);
+
   return (
-    <div className="flex gap-2">
+    <div ref={filterBarRef} className="flex gap-2">
       {/* Province Filter Bar */}
       <div className="bg-white rounded-lg shadow-lg relative">
         <button
           onClick={() => setIsProvinceOpen(!isProvinceOpen)}
-          className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition rounded-lg whitespace-nowrap"
+          className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition rounded-lg whitespace-nowrap cursor-pointer hover:scale-101"
         >
           <span className="font-medium text-gray-800">Provinces</span>
           <div className="flex items-center gap-2 ml-2">
@@ -103,7 +124,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                       className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                     <div
-                      className="w-4 h-4 rounded-full flex-shrink-0"
+                      className="w-4 h-4 rounded-full shrink-0"
                       style={{ backgroundColor: color }}
                     />
                     <span className="text-sm text-gray-700 flex-1">
@@ -121,7 +142,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       <div className="bg-white rounded-lg shadow-lg relative">
         <button
           onClick={() => setIsTemplateOpen(!isTemplateOpen)}
-          className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition rounded-lg whitespace-nowrap"
+          className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition rounded-lg whitespace-nowrap cursor-pointer hover:scale-101"
         >
           <span className="font-medium text-gray-800">Templates</span>
           <div className="flex items-center gap-2 ml-2">
@@ -178,7 +199,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                           className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
                         {IconComponent && (
-                          <div className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded flex-shrink-0">
+                          <div className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded shrink-0">
                             <IconComponent
                               size={16}
                               className="text-gray-700"
@@ -209,7 +230,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       {hasActiveFilters && (
         <button
           onClick={onClearFilters}
-          className="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-3 rounded-lg shadow-lg transition flex items-center gap-2 font-medium whitespace-nowrap"
+          className="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-3 rounded-lg shadow-lg transition flex items-center gap-2 font-medium whitespace-nowrap cursor-pointer hover:scale-101"
         >
           <X size={18} />
           Clear

@@ -5,7 +5,9 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   server: {
     proxy: {
-      "/api": "http://192.168.1.147:3000",
+      // "/api": "http://localhost:5173",
+      "/api": "https://map-be.cellapp.co",
+      // "/api": { target: "https://map-be.cellapp.co", changeOrigin: true },
     },
   },
   plugins: [react(), tailwindcss()],
