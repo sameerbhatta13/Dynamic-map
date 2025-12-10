@@ -105,53 +105,6 @@ export const LocationsList: React.FC<LocationsListProps> = ({
     setEditingFormId(null);
   };
 
-  // const handleSaveEdit = async (e: React.MouseEvent, form: Form) => {
-  //   e.stopPropagation();
-
-  //   if (!editFormData.place.latitude || !editFormData.place.longitude) {
-  //     alert("Please provide latitude and longitude");
-  //     return;
-  //   }
-
-  //   console.log("Saving edit for form:", form.id);
-  //   console.log("Edit form data:", editFormData);
-
-  //   const formData = new FormData();
-  //   formData.append("place.lat", editFormData.place.latitude.toString());
-  //   formData.append("place.lng", editFormData.place.longitude.toString());
-  //   formData.append("status", editFormData.status);
-
-  //   template.dynamicFields.forEach((field) => {
-  //     const value = editFormData[field.key];
-  //     if (value !== null && value !== undefined && value !== "") {
-  //       if (value instanceof File) {
-  //         formData.append(field.key, value);
-  //       } else if (typeof value === "object" && "latitude" in value) {
-  //         formData.append(`${field.key}.lat`, value.latitude.toString());
-  //         formData.append(`${field.key}.lng`, value.longitude.toString());
-  //       } else {
-  //         formData.append(field.key, value.toString());
-  //       }
-  //     }
-  //   });
-
-  //   // Log what we're sending
-  //   console.log("FormData entries:");
-  //   for (const [key, value] of formData.entries()) {
-  //     console.log(`${key}:`, value);
-  //   }
-
-  //   const result = await onUpdateForm(form.id, formData);
-
-  //   console.log("Update result:", result);
-
-  //   if (result.success) {
-  //     setEditingFormId(null);
-  //   } else if (result.error) {
-  //     alert(`Failed to update: ${result.error}`);
-  //   }
-  // };
-
   const handleSaveEdit = async (e: React.MouseEvent, form: Form) => {
     e.stopPropagation();
 

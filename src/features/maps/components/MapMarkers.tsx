@@ -62,7 +62,7 @@ export const useMapMarkers = ({
       const markerEl = document.createElement("div");
       markerEl.setAttribute("data-marker", "true");
       markerEl.setAttribute("data-province", province);
-      markerEl.setAttribute("data-status", form.status); // Add status attribute
+      markerEl.setAttribute("data-status", form.status);
       markerEl.style.backgroundColor = color;
       markerEl.style.width = "16px";
       markerEl.style.height = "16px";

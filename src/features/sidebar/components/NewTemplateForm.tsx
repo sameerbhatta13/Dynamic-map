@@ -80,53 +80,6 @@ export const NewTemplateForm: React.FC<NewTemplateFormProps> = ({
     setFields(updatedFields);
   };
 
-  // const handleSubmit = async () => {
-  //   if (!templateName || templateName.length < 3) {
-  //     alert("Template name must be at least 3 characters long");
-  //     return;
-  //   }
-
-  //   const validFields = fields.filter((f) => f.key && f.label);
-  //   if (validFields.length === 0) {
-  //     alert("Please add at least one valid field");
-  //     return;
-  //   }
-
-  //   const preparedFields = validFields.map((field) => {
-  //     const fieldData: {
-  //       key: string;
-  //       label: string;
-  //       type: TemplateField["type"];
-  //       required: boolean;
-  //       description?: string;
-  //     } = {
-  //       key: field.key,
-  //       label: field.label,
-  //       type: field.type,
-  //       required: field.required,
-  //     };
-  //     if (field.description && field.description.trim() !== "") {
-  //       fieldData.description = field.description;
-  //     }
-  //     return fieldData;
-  //   });
-
-  //   await onCreateTemplate({
-  //     name: templateName,
-  //     description: templateDescription,
-  //     markerIcon: selectedIcon,
-  //     fields: preparedFields,
-  //   });
-
-  //   // Reset form
-  //   setTemplateName("");
-  //   setTemplateDescription("");
-  //   setSelectedIcon("location");
-  //   setFields([
-  //     { key: "", label: "", type: "text", required: false, description: "" },
-  //   ]);
-  // };
-
   const handleSubmit = async () => {
     if (isSubmitting) return; // Prevent double submission
 

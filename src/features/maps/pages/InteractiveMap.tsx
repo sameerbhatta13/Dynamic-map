@@ -244,7 +244,6 @@ export default function InteractiveMap() {
     setSelectedTemplates([]);
   };
 
-  // Add these new handler functions after your existing filter handlers
   const handleSelectAllProvinces = () => {
     if (selectedProvinces.length === 0 || selectedProvinces.length === 7) {
       // If all are selected or none selected, deselect all
@@ -276,7 +275,7 @@ export default function InteractiveMap() {
     }
   };
 
-  // Province layer - use filteredForms
+  // Province layer
   useProvinceLayer({
     map: map.current,
     forms: forms,
@@ -286,7 +285,7 @@ export default function InteractiveMap() {
     setProvincesData,
   });
 
-  // Markers - use filteredForms
+  // Markers
   useMapMarkers({
     map: map.current,
     mapLoaded,
@@ -384,100 +383,6 @@ export default function InteractiveMap() {
     setLocationFormData(initialData);
   };
 
-  // const handleSubmitLocation = async () => {
-  //   if (!selectedTemplateForForm) return;
-
-  //   if (!locationFormData.place.latitude || !locationFormData.place.longitude) {
-  //     alert("Please provide latitude and longitude");
-  //     return;
-  //   }
-
-  //   // Validate link fields
-  //   for (const field of selectedTemplateForForm.dynamicFields) {
-  //     if (field.type === "link") {
-  //       const value = locationFormData[field.key];
-  //       if (value && typeof value === "string" && value !== "") {
-  //         try {
-  //           new URL(value);
-  //         } catch {
-  //           alert(
-  //             `Invalid URL for ${field.label}. Please enter a full URL starting with http:// or https://`
-  //           );
-  //           return;
-  //         }
-  //       } else if (field.required && (!value || value === "")) {
-  //         alert(`${field.label} is required`);
-  //         return;
-  //       }
-  //     }
-  //   }
-
-  //   const formData = new FormData();
-
-  //   // Add required fields
-  //   formData.append("templateId", selectedTemplateForForm.id);
-  //   formData.append("place.lat", locationFormData.place.latitude.toString());
-  //   formData.append("place.lng", locationFormData.place.longitude.toString());
-  //   formData.append("status", locationFormData.status);
-
-  //   // Add dynamic fields
-  //   selectedTemplateForForm.dynamicFields.forEach((field) => {
-  //     const value = locationFormData[field.key];
-
-  //     // Skip if value is empty, null, or undefined
-  //     if (value === null || value === undefined || value === "") {
-  //       return;
-  //     }
-
-  //     if (value instanceof File) {
-  //       formData.append(field.key, value);
-  //     } else if (typeof value === "object" && "latitude" in value) {
-  //       // For place type fields, append as lat/lng
-  //       formData.append(`${field.key}.lat`, value.latitude.toString());
-  //       formData.append(`${field.key}.lng`, value.longitude.toString());
-  //     } else {
-  //       formData.append(field.key, value.toString());
-  //     }
-  //   });
-
-  //   const result = await createForm(formData);
-
-  //   if (result.success) {
-  //     alert("Location added successfully!");
-  //     setLocationViewTab("view");
-
-  //     // Reset form with proper field types
-  //     const initialData: LocationFormData = {
-  //       place: { latitude: 0, longitude: 0 },
-  //       status: "ongoing",
-  //     };
-  //     selectedTemplateForForm.dynamicFields.forEach((field) => {
-  //       if (field.type === "number") {
-  //         initialData[field.key] = 0;
-  //       } else if (field.type === "place") {
-  //         initialData[field.key] = {
-  //           latitude: 0,
-  //           longitude: 0,
-  //         };
-  //       } else if (field.type === "image" || field.type === "document") {
-  //         initialData[field.key] = null;
-  //       } else if (
-  //         field.type === "text" ||
-  //         field.type === "date" ||
-  //         field.type === "time" ||
-  //         field.type === "link"
-  //       ) {
-  //         initialData[field.key] = "";
-  //       } else {
-  //         initialData[field.key] = "";
-  //       }
-  //     });
-  //     setLocationFormData(initialData);
-  //   } else {
-  //     alert(`Failed to add location: ${result.error || "Unknown error"}`);
-  //   }
-  // };
-
   const handleSubmitLocation = async () => {
     if (!selectedTemplateForForm) return;
 
@@ -566,16 +471,6 @@ export default function InteractiveMap() {
         formData.append(field.key, value.toString());
       }
     });
-
-    // Debug logging
-    console.log("=== Submitting Form ===");
-    for (const [key, value] of formData.entries()) {
-      if (value instanceof File) {
-        console.log(`${key}: [File] ${value.name} (${value.size} bytes)`);
-      } else {
-        console.log(`${key}:`, value);
-      }
-    }
 
     const result = await createForm(formData);
 
