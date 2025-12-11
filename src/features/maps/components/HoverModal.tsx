@@ -148,7 +148,7 @@ export default function HoverModal({
                   e.stopPropagation();
                   onClose();
                 }}
-                className="p-1 h-6 w-6 hover:bg-gray-100 rounded-full flex-shrink-0 transition-colors"
+                className="p-1 h-6 w-6 hover:bg-gray-100 rounded-full shrink-0 transition-colors"
                 aria-label="Close modal"
               >
                 <X className="w-3 h-3" />

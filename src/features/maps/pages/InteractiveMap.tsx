@@ -17,6 +17,7 @@ import type {
   Form,
   TemplateField,
 } from "../../../utils/types";
+import { statusColors } from "../../../utils/constants";
 
 declare global {
   interface Window {
@@ -89,6 +90,47 @@ export default function InteractiveMap() {
 
     return true;
   });
+
+  // Add this after your existing filteredForms logic
+  const searchResults = searchQuery.trim()
+    ? forms.filter((form) => {
+        const template = templates.find((t) => t.id === form.templateId);
+        if (!template) return false;
+
+        const query = searchQuery.toLowerCase();
+
+        // Search in template name
+        if (template.name.toLowerCase().includes(query)) return true;
+
+        // Search in form data fields
+        for (const field of template.dynamicFields) {
+          const value = form.data[field.key];
+          if (
+            value &&
+            typeof value === "string" &&
+            value.toLowerCase().includes(query)
+          ) {
+            return true;
+          }
+          if (typeof value === "number" && value.toString().includes(query)) {
+            return true;
+          }
+        }
+
+        // Search in province
+        const province = getProvince(form.data.place.lat, form.data.place.lng);
+        if (province.toLowerCase().includes(query)) return true;
+
+        // Search in status
+        const statusLabel =
+          form.status === "created"
+            ? "Halted"
+            : form.status.charAt(0).toUpperCase() + form.status.slice(1);
+        if (statusLabel.toLowerCase().includes(query)) return true;
+
+        return false;
+      })
+    : [];
 
   const handleDeleteTemplate = async (templateId: string) => {
     const result = await deleteTemplate(templateId);
@@ -500,6 +542,22 @@ export default function InteractiveMap() {
     }
   };
 
+  // Close search results when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest(".search-container")) {
+        setSearchQuery("");
+      }
+    };
+
+    if (searchQuery) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [searchQuery]);
+
   const handleLocationClick = (form: Form) => {
     if (map.current) {
       map.current.flyTo({
@@ -582,14 +640,102 @@ export default function InteractiveMap() {
           </svg>
         </button>
 
-        <div className="bg-white rounded-lg shadow-lg p-2 w-64">
-          <input
-            type="text"
-            placeholder="Search templates..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-3 py-2 border-none outline-none text-sm"
-          />
+        <div className="relative search-container">
+          <div className="bg-white rounded-lg shadow-lg p-2 w-64">
+            <input
+              type="text"
+              placeholder="Search locations..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-3 py-2 border-none outline-none text-sm"
+            />
+          </div>
+
+          {/* Search Results Dropdown */}
+          {searchQuery.trim() && (
+            <div className="absolute top-full mt-1 w-64 bg-white rounded-lg shadow-xl border border-gray-200 max-h-96 overflow-y-auto z-50">
+              {searchResults.length === 0 ? (
+                <div className="p-4 text-sm text-gray-500 text-center">
+                  No locations found
+                </div>
+              ) : (
+                <div className="py-2">
+                  <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    Found {searchResults.length} location
+                    {searchResults.length !== 1 ? "s" : ""}
+                  </div>
+                  {searchResults.map((form) => {
+                    const template = templates.find(
+                      (t) => t.id === form.templateId
+                    );
+                    const province = getProvince(
+                      form.data.place.lat,
+                      form.data.place.lng
+                    );
+                    const statusLabel =
+                      form.status === "created"
+                        ? "Halted"
+                        : form.status.charAt(0).toUpperCase() +
+                          form.status.slice(1);
+
+                    return (
+                      <button
+                        key={form.id}
+                        onClick={() => {
+                          handleLocationClick(form);
+                          setSearchQuery(""); // Clear search after clicking
+                        }}
+                        className="w-full px-3 py-2 hover:bg-gray-50 text-left transition cursor-pointer border-b border-gray-100 last:border-b-0"
+                      >
+                        <div className="flex items-start gap-2">
+                          <div
+                            className="w-2 h-2 rounded-full mt-1.5 shrink-0"
+                            style={{
+                              backgroundColor: statusColors[form.status],
+                            }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-gray-900 truncate">
+                              {template?.name || "Unknown Template"}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-0.5">
+                              {province} • {statusLabel}
+                            </div>
+                            <div className="text-xs text-gray-400 mt-0.5">
+                              {form.data.place.lat.toFixed(4)},{" "}
+                              {form.data.place.lng.toFixed(4)}
+                            </div>
+                            {/* Show first matching field */}
+                            {template?.dynamicFields
+                              .map((field) => {
+                                const value = form.data[field.key];
+                                if (
+                                  value &&
+                                  typeof value === "string" &&
+                                  value.length > 0 &&
+                                  value.length < 50
+                                ) {
+                                  return (
+                                    <div
+                                      key={field.key}
+                                      className="text-xs text-gray-600 mt-1 truncate"
+                                    >
+                                      {field.label}: {value}
+                                    </div>
+                                  );
+                                }
+                                return null;
+                              })
+                              .find((el) => el !== null)}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Filter Bar */}
@@ -623,7 +769,7 @@ export default function InteractiveMap() {
           </div>
           <div className="space-y-2 sm:space-y-3">
             <div className="flex items-center gap-2 sm:gap-3 group cursor-default">
-              <div className="relative flex-shrink-0">
+              <div className="relative shrink-0">
                 <div
                   className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white shadow-lg transition-transform group-hover:scale-125"
                   style={{ backgroundColor: "#ef4444" }}
@@ -638,7 +784,7 @@ export default function InteractiveMap() {
               </span>
             </div>
             <div className="flex items-center gap-2 sm:gap-3 group cursor-default">
-              <div className="relative flex-shrink-0">
+              <div className="relative shrink-0">
                 <div
                   className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white shadow-lg transition-transform group-hover:scale-125"
                   style={{ backgroundColor: "#eab308" }}
@@ -653,7 +799,7 @@ export default function InteractiveMap() {
               </span>
             </div>
             <div className="flex items-center gap-2 sm:gap-3 group cursor-default">
-              <div className="relative flex-shrink-0">
+              <div className="relative shrink-0">
                 <div
                   className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white shadow-lg transition-transform group-hover:scale-125"
                   style={{ backgroundColor: "#22c55e" }}
